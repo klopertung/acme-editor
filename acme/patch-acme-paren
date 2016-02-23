@@ -22,10 +22,8 @@ Building acme:
 
    ../../../bin/9 mk clean
 
-Common subdirectories: acme.orig/mail and acme.paren/mail
-diff -X diff.exclude -Nua acme.orig/text.c acme.paren/text.c
 --- acme.orig/text.c	2013-10-23 11:00:07.000000000 +0200
-+++ acme.paren/text.c	2016-02-16 14:25:17.000000000 +0100
++++ acme.paren/text.c	2016-02-23 11:37:15.000000000 +0100
 @@ -653,6 +653,10 @@
  	return rp;
  }
@@ -37,7 +35,7 @@ diff -X diff.exclude -Nua acme.orig/text.c acme.paren/text.c
  void
  texttype(Text *t, Rune r)
  {
-@@ -666,6 +670,57 @@
+@@ -666,6 +670,34 @@
  		return;
  	if(t->what == Tag)
  		t->w->tagsafe = FALSE;
@@ -46,45 +44,22 @@ diff -X diff.exclude -Nua acme.orig/text.c acme.paren/text.c
 +	if (findmatch == 1) {
 +		typecommit(t);
 +		/*
-+		 * Selection also sets the cursor, so we need to move the
-+		 * latter back to its old position. But we can't move to
-+		 * oldpos indiscriminatly, since one of several events may
-+		 * have occured:
-+		 * - the user may have B1-clicked (`null-selection'), and/to
-+		 *   move the cursor (most likely, but not necesserally) 
-+		 *   somewhere else, making returning to the old position
-+		 *   unwanted.  So we test for  fr.p0!=fr.p1 ,  i.e.,
-+		 *   the selection is stil active, and therefore no B1-click
-+		 *   has occurred, since B1-clicking removes selections.
-+		 *   However, if a match falls outside the (visual) window,
-+		 *   is `invisible', then no actual visual (painting)
-+		 *   selection is done and dot would _always_ be set (at the
-+		 *   position of the matched char) and never return to oldpos.
-+		 *   We handle this situation in part I. of the paren matching
-+		 *   code, where we initialize and do the actual paren matching.
-+		 * - the user may have made a new selection, for example with
-+		 *   B1-drag or B3-click/drag. 
-+		 *   In this case we do not want to move to oldpos either,
-+		 *   since this disables select-and-type-to-overwrite.
-+		 *   So we must check not only for an active selection,
-+		 *   but also whether it is still _our_ match-paren selection.
-+		 *   Our paren-match selection is saved in matchp0 and matchp1;
++		 * Bug: If the user selects the paren-match selection itself--
++		 *    selects the selection-- we _will_ return to oldpos,
++		 *    since this `new' selection is the same as the one that
++		 *    was a result of paren-matching.  This implementation
++		 *    cannot tell the difference. No select-and-type-to-overwrite
++		 *    is possible in this case. Probably rare, but a bug
++		 *    nonetheless.
 +		 *
-+		 *   Bug: if the user selects the paren-match selection itself,
-+		 *        we _will_ return to oldpos, since this `new'
-+		 *        selection is the same as the selection made by 
-+		 *        paren-matching.  This implementation cannot tell 
-+		 *        the difference. No select-and-type-to-overwrite
-+		 *        is possible in this case.
-+		 *
-+		 *   See findmatch(#). 
++		 *   :/findmatch\(#/ 
 +		 */
 +		if(t->q1 < t->file->b.nc && t->fr.p0 != t->fr.p1) {
 +			if(t->fr.p0 == matchp0 && t->fr.p1 == matchp1){
 +				textsetselect(t, t->q1, t->q1);
 +				textshow(t, oldpos, oldpos, TRUE);
 +			}
-+		}else{ /* is this branch necessary? */
++		}else{
 +			textsetselect(t, t->q1, t->q1);
 +			textshow(t, t->q1, t->q1, TRUE);
 +		}
@@ -95,7 +70,7 @@ diff -X diff.exclude -Nua acme.orig/text.c acme.paren/text.c
  
  	nr = 1;
  	rp = &r;
-@@ -879,6 +934,16 @@
+@@ -879,6 +911,16 @@
  			}
  		}
  		break; /* fall through to normal code */
@@ -112,17 +87,14 @@ diff -X diff.exclude -Nua acme.orig/text.c acme.paren/text.c
  	}
  	/* otherwise ordinary character; just insert, typically in caches of all texts */
  	for(i=0; i<t->file->ntext; i++){
-@@ -915,6 +980,43 @@
+@@ -915,6 +957,37 @@
  	if(r=='\n' && t->w!=nil)
  		wincommit(t->w, t);
  	t->iq1 = t->q0;
 +
-+	if(findmatch == 1){
++	if(findmatch == 1){   /* :/findmatch\(#/ */
 +		/*
-+		 * First skip one char back to start matching 
-+		 * because parenmatching occurs `on the inside'
-+		 * of a matching character, cf. how you would do
-+		 * it by double-clicking.
++		 * Put cursor on the left ("inside") of paren-char.
 +		 */
 +		q0 = t->q0-1;
 +		q1 = t->q1-1;
@@ -132,11 +104,8 @@ diff -X diff.exclude -Nua acme.orig/text.c acme.paren/text.c
 + 		/* found a matching character */
 +		if(q0 != q1){
 +			/*
-+			 * But if the matching char falls outside the visual
-+			 * text (is `invisible') do nothing. This is how most
-+			 * paren matching engines work; more importantly:
-+			 * we _must_ catch this situation: see findmatch(#)
-+			 * for an explanation.
++			 * If the matching char falls outside the visual
++			 * text (is `invisible') do nothing.
 +			 */
 +			if(q0 < t->org){
 +				findmatch=0;
