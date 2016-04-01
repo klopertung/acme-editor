@@ -22,69 +22,6 @@ Building acme:
 
    ../../../bin/9 mk clean
 
-Common subdirectories: acme.orig/.git and acme.paren/.git
-diff -X diff.exclude -Nua acme.orig/.gitignore acme.paren/.gitignore
---- acme.orig/.gitignore	1970-01-01 01:00:00.000000000 +0100
-+++ acme.paren/.gitignore	2016-02-19 14:14:15.000000000 +0100
-@@ -0,0 +1,5 @@
-+# Exclude everything, except acme/
-+/*
-+!/acme
-+!README.md
-+
-diff -X diff.exclude -Nua acme.orig/README.md acme.paren/README.md
---- acme.orig/README.md	1970-01-01 01:00:00.000000000 +0100
-+++ acme.paren/README.md	2016-02-19 14:16:48.000000000 +0100
-@@ -0,0 +1,49 @@
-+# Automatic parenthesis matching patch for the acme text editor.
-+
-+## File
-+
-+acme/patch-acme-paren
-+
-+## Description
-+
-+This is a patch for plan9port's acme which implements automatic
-+parenthesis matching. The characters that are matched, are the normal ones
-+already supported by acme's paren-matching. 
-+
-+Currently, parenthesis matching is hardcoded, and can not be turned off, though
-+it should not be difficult to implement a commandline option yourself.
-+
-+
-+## Notes
-+
-+- With acme's default colours, the highlighting is hardly noticable. You may
-+  need to change the (highlighting) colours in **acme.c**.  For example, make
-+  the default yellow for highlighting a bit darker.
-+
-+- The modified file is **text.c**, see the patch.
-+
-+
-+Modified from and tested with: plan9port version 20140306.
-+
-+
-+## Install
-+
-+- Move/copy the patchfile to
-+
-+     ../src/cmd/
-+
-+- cd to
-+    ../src/cmd/acme/
-+
-+- apply the patch
-+
-+    $ patch -Np1 < ../patchfile 2>&1 | tee log
-+
-+- if **tee(1)** is not available, or you don't want to use it:
-+
-+    $ patch -Np1 < ../patchfile 2>&1
-+
-+
-+## See also:
-+[https://github.com/9fans/plan9port](https://github.com/9fans/plan9port)
-+
 Common subdirectories: acme.orig/acme and acme.paren/acme
 Common subdirectories: acme.orig/mail and acme.paren/mail
 diff -X diff.exclude -Nua acme.orig/text.c acme.paren/text.c
